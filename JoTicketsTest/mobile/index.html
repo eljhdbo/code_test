@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JO Tickets - Accueil</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>JO Tickets 2024</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html" class="active">Matchs</a></li>
+                <li><a href="my-tickets.html">Mes Billets</a></li>
+                <li><a href="auth.html" id="authLink">Connexion</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h2>Tournoi Olympique de Football Paris 2024</h2>
+            <p>Réservez vos places pour assister aux matchs du tournoi olympique!</p>
+        </section>
+
+        <section class="events-container">
+            <h2>Prochains matchs</h2>
+            <div id="events-list" class="events-grid">
+                <!-- Le contenu sera chargé dynamiquement via JavaScript -->
+                <div class="loading">Chargement des matchs...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Comité International Olympique</p>
+    </footer>
+
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/events.js"></script>
+    <script src="assets/js/debug.js"></script>
+</body>
+</html>
