@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JO Tickets - Achat de billets</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        .purchase-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .event-summary {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--gray-color);
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .category-card {
+            border: 2px solid var(--gray-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-card:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .category-card.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(34, 99, 165, 0.1);
+        }
+        
+        .category-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .category-price {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .quantity-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+        
+        .quantity-btn {
+            width: 36px;
+            height: 36px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            height: 36px;
+            text-align: center;
+            margin: 0 0.5rem;
+            font-size: 1.2rem;
+            border: 1px solid var(--gray-color);
+            border-radius: 4px;
+        }
+        
+        .total-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-color);
+            text-align: right;
+        }
+        
+        .total-price {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .confirmation-section {
+            display: none;
+            text-align: center;
+            background-color: var(--success-color);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .confirmation-section h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .loading-indicator .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>JO Tickets 2024</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Matchs</a></li>
+                <li><a href="my-tickets.html">Mes Billets</a></li>
+                <li><a href="auth.html" id="authLink">Connexion</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="purchase-container">
+            <h2>Achat de billets</h2>
+            
+            <div class="event-summary" id="event-summary">
+                <div class="loading">Chargement des détails du match...</div>
+            </div>
+            
+            <h3>Sélectionnez votre catégorie</h3>
+            <div class="categories">
+                <div class="category-card" data-category="SILVER" data-price="100">
+                    <div class="category-name">Silver</div>
+                    <div class="category-price">100 €</div>
+                    <div>Bonne visibilité</div>
+                </div>
+                <div class="category-card" data-category="GOLD" data-price="200">
+                    <div class="category-name">Gold</div>
+                    <div class="category-price">200 €</div>
+                    <div>Excellente visibilité</div>
+                </div>
+                <div class="category-card" data-category="PLATINUM" data-price="300">
+                    <div class="category-name">Platinum</div>
+                    <div class="category-price">300 €</div>
+                    <div>Visibilité premium</div>
+                </div>
+            </div>
+            
+            <div class="quantity-control">
+                <button class="quantity-btn minus-btn">-</button>
+                <input type="number" class="quantity-input" value="1" min="1" max="10">
+                <button class="quantity-btn plus-btn">+</button>
+            </div>
+            
+            <div class="total-section">
+                <div class="total-price">Total: <span id="total-price">0 €</span></div>
+                <button class="btn btn-primary" id="purchase-button">Acheter maintenant</button>
+            </div>
+            
+            <div class="loading-indicator" id="loading-indicator">
+                <div class="spinner"></div>
+                <p>Traitement de votre achat...</p>
+            </div>
+            
+            <div class="error-message" id="error-message"></div>
+            
+            <div class="confirmation-section" id="confirmation-section">
+                <h3>Achat réussi !</h3>
+                <p>Vos billets ont été achetés avec succès. Vous pouvez les retrouver dans votre espace "Mes Billets".</p>
+                <div class="confirmation-actions">
+                    <a href="my-tickets.html" class="btn btn-primary">Voir mes billets</a>
+                    <a href="index.html" class="btn btn-secondary">Retour aux matchs</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Comité International Olympique</p>
+    </footer>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    // Débogage du stockage local
+    console.log("Contenu de localStorage:", localStorage);
+    try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        console.log("Données utilisateur:", userData);
+    } catch (e) {
+        console.error("Erreur lors du parsing des données utilisateur:", e);
+    }
+});
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Vérifier si l'utilisateur est connecté
+            if (!isLoggedIn()) {
+                // Rediriger vers la page de connexion
+                window.location.href = 'auth.html?redirect=ticket-purchase.html' + window.location.search;
+                return;
+            }
+            
+            // Récupérer l'ID de l'événement depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventId = urlParams.get('event');
+            
+            if (!eventId) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Variables
+            let selectedCategory = null;
+            let selectedPrice = 0;
+            let quantity = 1;
+            
+            // Éléments DOM
+            const eventSummary = document.getElementById('event-summary');
+            const categoryCards = document.querySelectorAll('.category-card');
+            const quantityInput = document.querySelector('.quantity-input');
+            const minusBtn = document.querySelector('.minus-btn');
+            const plusBtn = document.querySelector('.plus-btn');
+            const totalPriceElement = document.getElementById('total-price');
+            const purchaseButton = document.getElementById('purchase-button');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const confirmationSection = document.getElementById('confirmation-section');
+            const errorMessage = document.getElementById('error-message');
+            
+            // Charger les détails de l'événement
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/events/`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des événements');
+                }
+                
+                const events = await response.json();
+                const event = events.find(e => e.id == eventId);
+                
+                if (!event) {
+                    eventSummary.innerHTML = '<p class="error">Événement non trouvé</p>';
+                    return;
+                }
+                
+                const eventDate = new Date(event.start);
+                
+                eventSummary.innerHTML = `
+                    <h3>Match #${event.id}</h3>
+                    <div class="event-teams">
+                        <div class="team">
+                            <div class="team-name">${event.team_home.name}</div>
+                            <div class="team-code">${event.team_home.code}</div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="team">
+                            <div class="team-name">${event.team_away.name}</div>
+                            <div class="team-code">${event.team_away.code}</div>
+                        </div>
+                    </div>
+                    <div class="event-details">
+                        <div class="event-detail">
+                            <span class="detail-icon">📅</span>
+                            <span>${eventDate.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                        <div class="event-detail">
+                            <span class="detail-icon">⏰</span>
+                            <span>${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div class="event-detail">
+                            <span class="detail-icon">🏟️</span>
+                            <span>${event.stadium.name}, ${event.stadium.location}</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                eventSummary.innerHTML = `<p class="error">Erreur lors du chargement des détails du match: ${error.message}</p>`;
+                console.error('Erreur:', error);
+            }
+            
+            // Sélection de catégorie
+            categoryCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Supprimer la sélection actuelle
+                    categoryCards.forEach(c => c.classList.remove('selected'));
+                    
+                    // Ajouter la sélection
+                    this.classList.add('selected');
+                    
+                    // Mettre à jour les variables
+                    selectedCategory = this.dataset.category;
+                    selectedPrice = parseInt(this.dataset.price);
+                    
+                    // Mettre à jour le total
+                    updateTotal();
+                    
+                    // Masquer le message d'erreur
+                    errorMessage.style.display = 'none';
+                });
+            });
+            
+            // Gestion de la quantité
+            minusBtn.addEventListener('click', function() {
+                if (quantity > 1) {
+                    quantity--;
+                    quantityInput.value = quantity;
+                    updateTotal();
+                }
+            });
+            
+            plusBtn.addEventListener('click', function() {
+                if (quantity < 10) {
+                    quantity++;
+                    quantityInput.value = quantity;
+                    updateTotal();
+                }
+            });
+            
+            quantityInput.addEventListener('change', function() {
+                quantity = parseInt(this.value);
+                
+                if (quantity < 1) {
+                    quantity = 1;
+                    this.value = 1;
+                } else if (quantity > 10) {
+                    quantity = 10;
+                    this.value = 10;
+                }
+                
+                updateTotal();
+            });
+            
+            // Mettre à jour le total
+            function updateTotal() {
+                if (selectedCategory) {
+                    const total = selectedPrice * quantity;
+                    totalPriceElement.textContent = `${total} €`;
+                } else {
+                    totalPriceElement.textContent = '0 €';
+                }
+            }
+            
+            // Fonction pour acheter un billet
+async function purchaseTicket() {
+    if (!selectedCategory) {
+        errorMessage.textContent = 'Veuillez sélectionner une catégorie';
+        errorMessage.style.display = 'block';
+        return;
+    }
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!isLoggedIn()) {
+        window.location.href = 'auth.html?redirect=ticket-purchase.html' + window.location.search;
+        return;
+    }
+    
+    // Masquer le message d'erreur
+    errorMessage.style.display = 'none';
+    
+    // Afficher le chargement
+    loadingIndicator.style.display = 'block';
+    purchaseButton.disabled = true;
+    
+    try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        console.log("Données utilisateur:", userData); // Pour déboguer
+        
+        // S'assurer que l'ID utilisateur est disponible
+        if (!userData || !userData.id) {
+            throw new Error("Impossible de récupérer l'ID utilisateur. Veuillez vous reconnecter.");
+        }
+        
+        // Appel à l'API pour acheter le billet
+        const response = await fetch('http://127.0.0.1:8000/api/buyTicket/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                event_id: eventId,
+                category: selectedCategory,
+                quantity: quantity,
+                user_id: userData.id
+            })
+        });
+        
+        // Lire la réponse (même en cas d'erreur)
+        const responseText = await response.text();
+        console.log("Réponse brute:", responseText); // Pour déboguer
+        
+        // Essayer de parser la réponse comme JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("Erreur lors du parsing JSON:", e);
+            throw new Error("Réponse du serveur invalide");
+        }
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erreur lors de l\'achat');
+        }
+        
+        // Masquer le chargement
+        loadingIndicator.style.display = 'none';
+        
+        // Afficher la confirmation
+        confirmationSection.style.display = 'block';
+        
+        // Masquer les autres sections
+        document.querySelector('.categories').style.display = 'none';
+        document.querySelector('.quantity-control').style.display = 'none';
+        document.querySelector('.total-section').style.display = 'none';
+    } catch (error) {
+        console.error('Erreur d\'achat:', error);
+        
+        // Masquer le chargement
+        loadingIndicator.style.display = 'none';
+        purchaseButton.disabled = false;
+        
+        // Afficher l'erreur
+        errorMessage.textContent = `Erreur lors de l'achat: ${error.message}`;
+        errorMessage.style.display = 'block';
+    }
+}
+            
+            // Attacher la fonction au bouton d'achat
+            purchaseButton.addEventListener('click', purchaseTicket);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JO Tickets - Événements</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        .event-filters {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .filter-label {
+            font-weight: bold;
+            margin-right: 0.5rem;
+            min-width: 100px;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .filter-option {
+            padding: 0.5rem 1rem;
+            background-color: #f5f5f5;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-option:hover {
+            background-color: var(--gray-color);
+        }
+        
+        .filter-option.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .no-events {
+            text-align: center;
+            padding: 3rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>JO Tickets 2024</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Matchs</a></li>
+                <li><a href="events.html" class="active">Événements</a></li>
+                <li><a href="my-tickets.html">Mes Billets</a></li>
+                <li><a href="auth.html" id="authLink">Connexion</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h2>Tournoi Olympique de Football Paris 2024</h2>
+            <p>Découvrez tous les événements du tournoi olympique et réservez vos places!</p>
+        </section>
+        
+        <section class="event-filters">
+            <h3>Filtrer les événements</h3>
+            
+            <div class="filter-group">
+                <div class="filter-label">Stade:</div>
+                <div class="filter-options" id="stadium-filters">
+                    <div class="filter-option active" data-stadium="all">Tous</div>
+                    <!-- Les options seront ajoutées dynamiquement -->
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">Équipe:</div>
+                <div class="filter-options" id="team-filters">
+                    <div class="filter-option active" data-team="all">Toutes</div>
+                    <!-- Les options seront ajoutées dynamiquement -->
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">Phase:</div>
+                <div class="filter-options">
+                    <div class="filter-option active" data-phase="all">Toutes</div>
+                    <div class="filter-option" data-phase="group">Phase de groupes</div>
+                    <div class="filter-option" data-phase="quarter">Quarts de finale</div>
+                    <div class="filter-option" data-phase="semi">Demi-finales</div>
+                    <div class="filter-option" data-phase="final">Finale</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="events-container">
+            <h2>Événements</h2>
+            
+            <div id="events-list" class="events-grid">
+                <!-- Le contenu sera chargé dynamiquement via JavaScript -->
+                <div class="loading">Chargement des événements...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Comité International Olympique</p>
+    </footer>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/events.js"></script>
+    <script src="assets/js/debug.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Charger les stades pour les filtres
+                const stadiums = await getStadiums();
+                const stadiumFilters = document.getElementById('stadium-filters');
+                
+                stadiums.forEach(stadium => {
+                    const option = document.createElement('div');
+                    option.className = 'filter-option';
+                    option.dataset.stadium = stadium.id;
+                    option.textContent = stadium.name;
+                    
+                    stadiumFilters.appendChild(option);
+                });
+                
+                // Charger les équipes pour les filtres
+                const teams = await getTeams();
+                const teamFilters = document.getElementById('team-filters');
+                
+                teams.forEach(team => {
+                    const option = document.createElement('div');
+                    option.className = 'filter-option';
+                    option.dataset.team = team.id;
+                    option.textContent = team.name;
+                    
+                    teamFilters.appendChild(option);
+                });
+                
+                // Gérer les filtres
+                const filterOptions = document.querySelectorAll('.filter-option');
+                
+                filterOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        // Désactiver les autres options dans le même groupe
+                        const group = this.closest('.filter-options');
+                        group.querySelectorAll('.filter-option').forEach(opt => {
+                            opt.classList.remove('active');
+                        });
+                        
+                        // Activer cette option
+                        this.classList.add('active');
+                        
+                        // Filtrer les événements
+                        filterEvents();
+                    });
+                });
+                
+                // Fonction pour filtrer les événements
+                function filterEvents() {
+                    const selectedStadium = document.querySelector('#stadium-filters .filter-option.active').dataset.stadium;
+                    const selectedTeam = document.querySelector('#team-filters .filter-option.active').dataset.team;
+                    const selectedPhase = document.querySelector('.filter-options .filter-option.active[data-phase]').dataset.phase;
+                    
+                    const eventCards = document.querySelectorAll('.event-card');
+                    
+                    eventCards.forEach(card => {
+                        let showCard = true;
+                        
+                        // Filtrer par stade
+                        if (selectedStadium !== 'all' && card.dataset.stadium !== selectedStadium) {
+                            showCard = false;
+                        }
+                        
+                        // Filtrer par équipe
+                        if (selectedTeam !== 'all' && !card.dataset.teams.includes(selectedTeam)) {
+                            showCard = false;
+                        }
+                        
+                        // Filtrer par phase
+                        if (selectedPhase !== 'all' && card.dataset.phase !== selectedPhase) {
+                            showCard = false;
+                        }
+                        
+                        // Afficher ou masquer la carte
+                        card.style.display = showCard ? 'block' : 'none';
+                    });
+                    
+                    // Vérifier s'il y a des événements visibles
+                    const visibleEvents = document.querySelectorAll('.event-card[style="display: block"]');
+                    
+                    if (visibleEvents.length === 0) {
+                        // Afficher un message s'il n'y a pas d'événements
+                        let noEventsElement = document.querySelector('.no-events');
+                        
+                        if (!noEventsElement) {
+                            noEventsElement = document.createElement('div');
+                            noEventsElement.className = 'no-events';
+                            noEventsElement.innerHTML = '<p>Aucun événement ne correspond à vos critères de recherche.</p>';
+                            
+                            document.getElementById('events-list').appendChild(noEventsElement);
+                        } else {
+                            noEventsElement.style.display = 'block';
+                        }
+                    } else {
+                        // Masquer le message s'il y a des événements
+                        const noEventsElement = document.querySelector('.no-events');
+                        
+                        if (noEventsElement) {
+                            noEventsElement.style.display = 'none';
+                        }
+                    }
+                }
+                
+                // Charger les événements
+                displayEvents();
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement des filtres:', error);
+            }
+        });
+    </script>
+</body>
+</html>
