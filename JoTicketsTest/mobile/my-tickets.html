@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JO Tickets - Mes Billets</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        .tickets-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .match-tickets {
+            margin-bottom: 3rem;
+            border: 1px solid var(--gray-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .match-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .match-details {
+            padding: 1.5rem;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid var(--gray-color);
+        }
+        
+        .ticket-list {
+            padding: 0;
+        }
+        
+        .ticket-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ticket-item:last-child {
+            border-bottom: none;
+        }
+        
+        .ticket-category {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        .category-silver {
+            background-color: #C0C0C0;
+            color: #333;
+        }
+        
+        .category-gold {
+            background-color: #FFD700;
+            color: #333;
+        }
+        
+        .category-platinum {
+            background-color: #E5E4E2;
+            color: #333;
+        }
+        
+        .qr-code {
+            width: 150px;
+            height: 150px;
+            background-color: var(--gray-color);
+            margin: 0 auto;
+        }
+        
+        .no-tickets {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .login-required {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .download-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .download-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>JO Tickets 2024</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Matchs</a></li>
+                <li><a href="my-tickets.html" class="active">Mes Billets</a></li>
+                <li><a href="auth.html" id="authLink">Connexion</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="tickets-container">
+            <h2>Mes Billets</h2>
+            
+            <div id="tickets-content">
+                <div class="loading">Chargement de vos billets...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Comité International Olympique</p>
+    </footer>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const ticketsContent = document.getElementById('tickets-content');
+            
+            // Vérifier si l'utilisateur est connecté
+            if (!isLoggedIn()) {
+                ticketsContent.innerHTML = `
+                    <div class="login-required">
+                        <p>Vous devez être connecté pour voir vos billets.</p>
+                        <a href="auth.html?redirect=my-tickets.html" class="btn btn-primary">Se connecter</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                // Récupérer les billets de l'utilisateur
+                const tickets = await getUserTickets();
+                
+                if (tickets.length === 0) {
+                    ticketsContent.innerHTML = `
+                        <div class="no-tickets">
+                            <p>Vous n'avez pas encore acheté de billets.</p>
+                            <a href="index.html" class="btn btn-primary">Voir les matchs</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Grouper les billets par événement
+                const ticketsByEvent = {};
+                
+                tickets.forEach(ticket => {
+                    if (!ticketsByEvent[ticket.event.id]) {
+                        ticketsByEvent[ticket.event.id] = {
+                            event: ticket.event,
+                            tickets: []
+                        };
+                    }
+                    
+                    ticketsByEvent[ticket.event.id].tickets.push(ticket);
+                });
+                
+                // Vider le conteneur
+                ticketsContent.innerHTML = '';
+                
+                // Afficher les billets groupés par événement
+                Object.values(ticketsByEvent).forEach(group => {
+                    const eventDate = new Date(group.event.start);
+                    
+                    const matchTicketsElement = document.createElement('div');
+                    matchTicketsElement.className = 'match-tickets';
+                    
+                    matchTicketsElement.innerHTML = `
+                        <div class="match-header">
+                            <h3>Match #${group.event.id}</h3>
+                            <div>${eventDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                        </div>
+                        <div class="match-details">
+                            <div class="event-teams">
+                                <div class="team">
+                                    <div class="team-name">${group.event.team_home.name}</div>
+                                    <div class="team-code">${group.event.team_home.code}</div>
+                                </div>
+                                <div class="vs">VS</div>
+                                <div class="team">
+                                    <div class="team-name">${group.event.team_away.name}</div>
+                                    <div class="team-code">${group.event.team_away.code}</div>
+                                </div>
+                            </div>
+                            <div class="event-details">
+                                <div class="event-detail">
+                                    <span class="detail-icon">⏰</span>
+                                    <span>${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <div class="event-detail">
+                                    <span class="detail-icon">🏟️</span>
+                                    <span>${group.event.stadium.name}, ${group.event.stadium.location}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ticket-list">
+                            ${group.tickets.map(ticket => {
+                                // Générer le QR code avec des paramètres optimisés
+                                const typeNumber = 0; // Auto-détection
+                                const errorCorrectionLevel = 'H'; // Haute correction d'erreur
+                                const qr = qrcode(typeNumber, errorCorrectionLevel);
+                                qr.addData(ticket.id);
+                                qr.make();
+                                const qrCodeSvg = qr.createSvgTag(5);
+                                
+                                return `
+                                    <div class="ticket-item">
+                                        <div class="ticket-info">
+                                            <div>
+                                                <span class="ticket-category category-${ticket.category.toLowerCase()}">${ticket.category}</span>
+                                            </div>
+                                            <div>Billet #${ticket.id.substring(0, 8)}</div>
+                                            <div>Prix: ${ticket.price} €</div>
+                                            <div>
+                                                <a href="#" class="download-button" data-qr="${ticket.id}" onclick="downloadQRCode(event, '${ticket.id}')">
+                                                    <span>📥</span> Télécharger QR Code
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="ticket-qr">
+                                            ${qrCodeSvg}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                    
+                    ticketsContent.appendChild(matchTicketsElement);
+                });
+            } catch (error) {
+                ticketsContent.innerHTML = `<p class="error">Erreur lors du chargement des billets: ${error.message}</p>`;
+            }
+        });
+
+        // Fonction pour télécharger un QR code
+function downloadQRCode(event, ticketId) {
+    event.preventDefault();
+    
+    // Trouver le SVG du QR code
+    const ticketItem = event.target.closest('.ticket-item');
+    const qrCodeSvg = ticketItem.querySelector('svg');
+    
+    // Créer un élément canvas
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    // Taille du canvas
+    canvas.width = 300;
+    canvas.height = 300;
+    
+    // Dessiner un fond blanc
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Convertir le SVG en image
+    const img = new Image();
+    img.onload = function() {
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Créer un lien de téléchargement
+        const link = document.createElement('a');
+        link.download = `ticket-${ticketId.substring(0, 8)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+    
+    // Convertir le SVG en data URL
+    const svgData = new XMLSerializer().serializeToString(qrCodeSvg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    img.src = url;
+}     
+            // Ajouter un texte informatif
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Billet JO: ${ticketId.substring(0, 8)}...`, canvas.width / 2, canvas.height - 20);
+            
+            // Télécharger l'image
+            const link = document.createElement('a');
+            link.download = `ticket-${ticketId.substring(0, 8)}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+    </script>
+</body>
+</html>
