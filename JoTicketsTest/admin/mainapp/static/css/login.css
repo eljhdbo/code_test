@@ -1,0 +1,142 @@
+@font-face {
+    font-family: 'Paris2024';
+    src: url('../Paris2024.ttf') format('truetype');
+}
+
+:root {
+    --background: #1B1B3A;
+    --primary: #F03C63;
+    --gold: #FFB100;
+    --white: #FFFFFF;
+    --error: #FF4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--background);
+    font-family: 'Paris2024', Arial, sans-serif;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-content {
+    width: 100%;
+    max-width: 400px;
+    padding: 0 20px;
+}
+
+.logo-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-section h1 {
+    color: var(--white);
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+.login-box {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.login-box h2 {
+    color: var(--gold);
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.login-box h3 {
+    color: var(--white);
+    opacity: 0.8;
+    font-size: 1rem;
+    font-weight: normal;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    color: var(--white);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    font-family: 'Paris2024', Arial, sans-serif;
+}
+
+button:hover {
+    background: #e02e53;
+    transform: translateY(-2px);
+}
+
+.error {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    color: var(--error);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+@media (max-width: 480px) {
+    .login-box {
+        padding: 30px 20px;
+    }
+
+    .logo-section h1 {
+        font-size: 2rem;
+    }
+}

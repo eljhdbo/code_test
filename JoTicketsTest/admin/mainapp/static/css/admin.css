@@ -1,0 +1,66 @@
+/* Styles généraux */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+/* Styles de la table */
+.matches-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.matches-table th,
+.matches-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.matches-table th {
+    background-color: #f7f7f7;
+    color: #555;
+}
+
+.matches-table input,
+.matches-table select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Styles des boutons */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #1e7e34;
+}
